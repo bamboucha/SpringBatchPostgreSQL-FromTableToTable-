@@ -1,6 +1,10 @@
 package batchcsvpostgresql.step;
 
 import java.util.List;
+
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.annotation.BeforeStep;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.support.DaoSupport;
@@ -15,6 +19,8 @@ import batchcsvpostgresql.model.Person;
 // A revoir la méthode des Writer comment c'est fait
 public class Writer extends JdbcDaoSupport implements ItemWriter<Person> {
 
+	private StepExecution stepExecution;
+	
 	@Autowired
 	private final PersonDao personDao;
 
@@ -22,9 +28,18 @@ public class Writer extends JdbcDaoSupport implements ItemWriter<Person> {
 		this.personDao = personDao;
 	}
 
+	@BeforeStep
+    public void saveStepExecution(StepExecution stepExecution) {
+        this.stepExecution = stepExecution;
+    }
+	
 	@Override
 	public void write(List<? extends Person> items) throws Exception {
+		ExecutionContext stepContext = this.stepExecution.getExecutionContext();
+        stepContext.put("someKey", items);
 		personDao.insert(items);
 	}
+	
+	
 
 }
